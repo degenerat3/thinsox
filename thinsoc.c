@@ -13,6 +13,8 @@
 #define PORT 668
 
 
+
+
 //listener
 void *listenSOX(int socketFD)
 {
@@ -23,7 +25,22 @@ void *listenSOX(int socketFD)
         int lengthWeGot = recv(socketFD, msg, msglen, 0);
         if (lengthWeGot>0)
         {
-            printf("l %i sock got %s\n", lengthWeGot, msg);//fiz later
+            //parse sox message
+            unsigned char *soxhead = (unsigned char*)malloc(sizeof(unsigned char)*3);
+            unsigned char *name = (unsigned char*)malloc(sizeof(unsigned char)*5);
+            unsigned char *message = (unsigned char*)malloc(sizeof(unsigned char)*lengthWeGot-8);
+            memcpy(soxhead, msg, 3);
+            memcpy(name, msg+3, 5);
+            memcpy(message, msg+8, lengthWeGot-8);
+            if (soxhead[0]=='S'&&soxhead[1]=='O',soxhead[2]=='X')//replace with loop sometime
+            {
+                printf("%s | %s \n",name,message);
+            } else {
+                printf("%s\n",soxhead);
+            }
+            free(soxhead);
+            free(name);
+            free(message);
         }
         free(msg);
         usleep(1000);
@@ -33,12 +50,11 @@ void *listenSOX(int socketFD)
 
 int sendSOX(unsigned char *msg, unsigned char *from, int socketFD)
 {
-    int sizeOfPayload = sizeof(unsigned char)*8+strlen(msg)+1;
+    int sizeOfPayload = sizeof(unsigned char)*8+strlen(msg);
     unsigned char *payload = (unsigned char *)malloc(sizeOfPayload); //SOX | NAME0 | MSG...
     memcpy(payload, "SOX",3);
     memcpy(payload+3, from, strlen(from));
     memcpy(payload+3+strlen(from), msg, strlen(msg));
-    printf("SENDING %i : %s \n", sizeOfPayload, payload);
     int totalBytesSent=0;
     for (int i = 0; i < 254; ++i)
     {
@@ -100,18 +116,19 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    char *iname = (unsigned char *)malloc(sizeof(unsigned char)*5);
-    printf("What is you name?(5 characters max): ");
-    fgets(iname, 5, stdin);
     char *name = (unsigned char *)malloc(sizeof(unsigned char)*5);
-    memcpy(name,iname,5);
+    printf("What is you name? (5 characters max): ");
+    scanf("%s",name);
+
 
     while(1)
     {
         //input
-        unsigned char *msg = "This is a sample message that someone might send (:";
-        unsigned char *name = "Bobby";
+        //unsigned char *name = "Bobby";
+        //parse for input
+        char *msg = (unsigned char *)malloc(sizeof(unsigned char)*500);
+        printf("| ");
+        scanf("%s",msg);
         sendSOX(msg, name, server_fd);
-        sleep(1);
     }
 }
