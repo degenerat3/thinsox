@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 
-#define PORT 667
+#define PORT 668
 
 int main(int argc, char **argv) 
 {
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     struct sockaddr_in myaddr;
     struct in_addr addr;
     myaddr.sin_family = AF_INET;
-    myaddr.sin_addr.s_addr = INADDR_ANY;
+    myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     //myaddr.sin_addr.s_addr = inet_addr("192.168.1.107");
     myaddr.sin_port = htons(PORT);
 
@@ -45,29 +45,34 @@ int main(int argc, char **argv)
     }
 
     int count = 0;
+    int blasts = 0;
     while(1)
     {
         char *destinationIP = (char*)malloc(13 * sizeof(char));
         sprintf(destinationIP, "192.168.1.%i", count%253);
-        printf("%s\n",destinationIP);
         struct sockaddr_in dest;
         dest.sin_family = AF_INET;
         dest.sin_addr.s_addr = inet_addr(destinationIP);
         myaddr.sin_port = htons(PORT);
         char *payload = "HELLO";
-        sendto(server_fd, payload, sizeof(payload), 0, (struct sockaddr *)&dest, sizeof(&dest));
-        
-        
+        //sendto(server_fd, payload, sizeof(payload), 0, (struct sockaddr *)&dest, sizeof(&dest));
         int msglen = sizeof(unsigned char)*100;
         unsigned char *msg = (unsigned char *)malloc(msglen);
-        int lengthWeGot = recv(server_fd, msg, msglen, 0);
-        if (lengthWeGot>0)
-        {
-            printf("%s\n", msg);
-        } else {
-            printf("we got nothing\n");
-        }
+        // int lengthWeGot = recv(server_fd, msg, msglen, 0);
+        // if (lengthWeGot>0)
+        // {
+        //     printf("%s\n", msg);
+        // } else {
+        //     printf("we got nothing\n");
+        // }
+        free(msg);
         free(destinationIP);
         count+=1;
+        if (count%253==0)
+        {
+            blasts +=1 ;
+            printf("blasted %i\n",blasts);
+            sleep(1);
+        }
     }
 }
