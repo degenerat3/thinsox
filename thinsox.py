@@ -1,73 +1,61 @@
-#! /usr/bin/env python3
-
-import argparse
 import asyncio
+from soxprotocol import SoxClientProtocol, SoxServerProtocol
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--host',
-                        type=str,
-                        default='0.0.0.0',
-                        help='The interface that you would like to bind to',
-                        )
-
-    parser.add_argument('--port',
-                        type=str,
-                        default='8000',
-                        help='The port that you would like to listen on',
-                        )
-
-    return parser.parse_args()
+try:
+    from socket import socketpair
+except ImportError:
+    from asyncio.windows_utils import socketpair
 
 class ThinSox():
-    host = ""
-    port = ""
-    loop = asyncio.get_event_loop()
-    reader = None
-    writer = None
-    server = None
+    _host = "127.0.0.1"
+    _port = "8000"
+    _loop = asyncio.get_event_loop()
+    _username = ""
+    _transport = None
+    _protocol = None
 
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-
-    async def get_connection(self):
-        return await asyncio.open_connection(host=self.host, port=int(self.port), loop=self.loop)
+    def __init__(self):
+        self._rsock, self._wsock = socketpair()
 
     def run(self):
         try:
             self.read_messages()
-            self.loop.run_forever()
+            self._loop.run_forever()
         except KeyboardInterrupt:
             pass
+        except Exception as e:
+            print(e)
         finally:
-            self.server.close()
-            self.loop.run_until_complete(self.server.wait_closed())
-            self.loop.close()
+            if self._rsock:
+                self._rsock.close()
+            if self._transport:
+                self._transport.close()
+            self._loop.close()
             return
 
     def read_messages(self):
-        self.server = self.loop.run_until_complete(
-            asyncio.start_server(
-                self.get_message,
-                self.host,
-                int(self.port),
-                loop=self.loop)
+        connect = self._loop.create_datagram_endpoint(
+            SoxServerProtocol,
+            local_addr=(self._host, self._port)
         )
+        self._loop.run_until_complete(connect)
 
-    async def send_message(self, message):
-        pass
+    def send_message(self, message):
+        # Prepend the username, per sox protocol
+        message = self._username + message
 
-    async def get_message(self, reader, writer):
-        while True:
-            data = await reader.read(100)
-            message = data.decode()
-            print(message)
-            if 'STOP' in message:
-                break
-        writer.close()
+        for i in range(0,255):
+            connect = self._loop.create_datagram_endpoint(
+                lambda: SoxClientProtocol(message, self._loop),
+                remote_addr=("192.168.1." + str(i), self._port)
+            )
+            self._loop.run_until_complete(connect)
 
-if __name__ == '__main__':
-    args = get_args()
-    thinsox = ThinSox(args.host, args.port)
-    thinsox.run()
+    def set_username(self, username):
+        self._username = username
+
+    def set_host(self, host):
+        self._host = host
+
+    def set_port(self, port):
+        self._port = port
