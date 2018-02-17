@@ -23,7 +23,7 @@ void *listenSOX(int socketFD)
         int msglen = sizeof(unsigned char)*500;
         unsigned char *msg = (unsigned char *)malloc(msglen);
         int lengthWeGot = recv(socketFD, msg, msglen, 0);
-        if (lengthWeGot>0)
+        if (lengthWeGot>8)
         {
             //parse sox message
             unsigned char *soxhead = (unsigned char*)malloc(sizeof(unsigned char)*3);
@@ -127,8 +127,8 @@ int main(int argc, char **argv)
         //unsigned char *name = "Bobby";
         //parse for input
         char *msg = (unsigned char *)malloc(sizeof(unsigned char)*500);
-        printf("| ");
         scanf("%s",msg);
         sendSOX(msg, name, server_fd);
+        free(msg);
     }
 }
