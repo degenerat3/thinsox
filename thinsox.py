@@ -43,16 +43,25 @@ class ThinSox():
     def send_message(self, message):
         # Prepend the username, per sox protocol
         message = self._username + message
+        prefix = self._host.split('.')[:-1]
+        prefix = '.'.join(prefix) + '.'
 
         for i in range(0,255):
             connect = self._loop.create_datagram_endpoint(
                 lambda: SoxClientProtocol(message, self._loop),
-                remote_addr=("192.168.1." + str(i), self._port)
+                remote_addr=(prefix + str(i), self._port)
             )
             self._loop.run_until_complete(connect)
 
     def set_username(self, username):
-        self._username = username
+        temp = username
+        
+        if len(username) < 5:
+            pad = 5 - len(username)
+            for i in range(pad):
+                temp = temp + " "
+
+        self._username = temp
 
     def set_host(self, host):
         self._host = host

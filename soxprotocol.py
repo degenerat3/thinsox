@@ -13,7 +13,9 @@ class SoxClientProtocol(asyncio.DatagramProtocol):
         self.transport.sendto(self.message.encode())
 
     def error_received(self, exc):
-        print('Error received:', exc)
+        if isinstance(exc, OSError):
+            if exc.errno != 65:
+                print('Error received:', exc)
 
     def connection_lost(self, exc):
         print("Socket closed, stop the event loop")
