@@ -10,8 +10,8 @@ class SoxClientProtocol(asyncio.DatagramProtocol):
     def connection_made(self, transport):
         self.transport = transport
         self.translate_to_sox()
-        print(self.message)
         self.transport.sendto(self.message.encode())
+        self.transport.close()
 
     def error_received(self, exc):
         if isinstance(exc, OSError):
@@ -19,7 +19,8 @@ class SoxClientProtocol(asyncio.DatagramProtocol):
                 print('Error received:', exc)
 
     def connection_lost(self, exc):
-        print("Socket closed, stop the event loop")
+        pass
+        # print("Socket closed, stop the event loop")
         # loop = asyncio.get_event_loop()
         # loop.stop()
 
