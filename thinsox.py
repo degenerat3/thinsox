@@ -46,7 +46,7 @@ class ThinSox():
         prefix = self._host.split('.')[:-1]
         prefix = '.'.join(prefix) + '.'
 
-        for i in range(0,255):
+        for i in range(1,255):
             connect = self._loop.create_datagram_endpoint(
                 lambda: SoxClientProtocol(message, self._loop),
                 remote_addr=(prefix + str(i), self._port)
