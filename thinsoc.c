@@ -127,7 +127,9 @@ int main(int argc, char **argv)
         //unsigned char *name = "Bobby";
         //parse for input
         char *msg = (unsigned char *)malloc(sizeof(unsigned char)*500);
-        scanf("%s",msg);
+        //scanf("%s",msg);
+	//printf(">");
+	fgets(msg, 500, stdin);
         sendSOX(msg, name, server_fd);
         free(msg);
     }
