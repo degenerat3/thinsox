@@ -55,7 +55,6 @@ class ThinSox():
 
     def set_username(self, username):
         temp = username
-        
         if len(username) < 5:
             pad = 5 - len(username)
             for i in range(pad):
